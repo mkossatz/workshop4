@@ -6,6 +6,8 @@ modules:
     name: Introduction
   prereq:
     name: Workshop Pre-requisites
+  introductiontocontainers:
+    name: Introduction to Containers
   introductiontooc:
     name: Introduction to 'oc'
   applicationbasics:
