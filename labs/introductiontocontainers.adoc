@@ -16,14 +16,55 @@ Author: Max Kossatz (feedback to mkossatz@redhat.com)
 === Using Image Libraries
 ...
 
+[source]
+----
+sudo podman search httpd
+sudo podman pull rhscl/httpd-24-rhel7
+----
+
 === Managing Images
 ...
+
+[source]
+----
+sudo podman images
+----
 
 === Running Containers
 ...
 
+[source]
+----
+sudo podman run -d -p 8080:8080 --name=webserver rhscl/httpd-24-rhel7:2.4-36.8
+curl http://localhost:8080
+----
+
+[source]
+----
+sudo podman run -it ubi7/ubi:7.7 /bin/bash
+hostname
+----
+
 === Managing Containers
 ...
+
+[source]
+----
+sudo podman ps
+sudo podman exec webserver cat /etc/hostname
+sudo podman exec -it webserver /bin/bash
+sudo podman stop webserver
+sudo podman ps
+curl http://localhost:8080
+sudo podman start webserver
+sudo podman ps
+curl http://localhost:8080
+sudo podman stop webserver
+sudo podman rm webserver
+curl http://localhost:8080
+sudo podman ps
+----
+
 
 === Attaching Persistent Storage to Containers
 ...
