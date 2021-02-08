@@ -1,0 +1,16 @@
+workshop_manifests:
+  - id: container_adoption
+    title: Container Adoption
+    labs:
+      - id: prereq
+        title: Workshop Pre-requisites
+      - id: introductiontocontainers
+        title: Introduction to Containers
+      - id: introductiontooc
+        title: Introduction to 'oc'
+      - id: applicationbasics
+        title: Application Basics
+      - id: pvs
+        name: Understanding Persistent Volumes
+      - id: serverlessserving
+        title: OpenShift Serverless Serving
