@@ -1,73 +1,221 @@
 Author: Max Kossatz (feedback to mkossatz@redhat.com)
 
-=== Introduction
-...
+=== Introducing Containers
+Imagine you’re developing an application. You do your work on a laptop and your environment has a specific configuration. 
+Other developers may have slightly different configurations. The application you’re developing relies on that configuration 
+and is dependent on specific libraries, dependencies, and files. Meanwhile, your business has development and production environments 
+that are standardized with their own configurations and their own sets of supporting files. 
+You want to emulate those environments as much as possible locally, but without all the overhead of recreating the server environments. 
+
+So, how do you make your app work across these environments, pass quality assurance, and get your app deployed 
+without massive headaches, rewriting, and break-fixing? 
+The answer: containers.
 
 ==== What is a Container?
-...
+Linux containers are technologies that allow you to package and isolate applications with their entire runtime environment (all of the files necessary to run).
+Containers dont require an entire operating system like VMs do only the exact components it needs in order to operate. This provides easy of deployment for operations 
+and confidence for developers that their application will run the same on many different platforms or operating systems.
+
+==== What is a Pod
+A Kubernetes pod is a collection of one or more Linux containers, and is the smallest unit of a Kubernetes application. 
+Any given pod can be composed of multiple, tightly coupled containers (an advanced use case) or just a single container (a more common use case).
+It specially uses a main container together with one or more “sidecar containers” running in the same Pod as the main container, to “help” with the main task it was designed for.
+
+==== What is a Volume
+Storage in the container is ephemeral, meaning that its contents are lost after you remove the container.
+If data used by your container must be preserved when the container is restarted, then ephemeral storage is not sufficient. For example, your container might be a database server and you must preserve the database itself when the container restarts. To support containerized applications with this requirement, you must provide the container with persistent storage. One easy way to provide a container with persistent storage is to use a directory on the container host to store the data, which is referred to as a volume. 
+
 
 ==== What is a Container Image?
-...
+Container images package all the libraries and dependencies and applicatio needs so you can ship an entire application as one package. 
+This makes them lightweight, standalone, executable package of software that includes everything needed to run an application: 
+code, runtime, system tools, system libraries and settings.
 
 ==== What is a Dockerfile?
-...
+Images are built automatically by reading the instructions from a Dockerfile. 
+A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. 
+Using docker build users can create an automated build that executes several command-line instructions in succession.
 
+==== What is a Image Repositories
+When working with container images, you need somewhere to save and access them as they are created and that’s where a container registry comes in. 
+The registry essentially acts as a place to store container images and share them out via a process of uploading to (pushing) and downloading from (pulling). 
+Once the image is on another system, the original application contained within it can be run on that system as well. 
+
+
+
+=== Using Containers
+
+Kubernetes is a platform for managing deployments across an enterprise, 
+but developers will often want to deploy containers on their PCs without a need for any complex orchestration.
+Docker and Podman are lightweight container engines that allow you to run containers with ease.
+Podman is becoming more and more popular because it is capable of running containers in exactly the same way Docker does, 
+but it is also capable of running Pods, which allows developers to use the same deployment strategies as with Kubernetes.
 
 === Using Image Libraries
-...
+Public repositories allow developers and vendors to share container images.
+By default, podman looks for requested images in registry.access.redhat.com, registry.redhat.io and docker.io in this order.
 
+Execute the commands below to download the image for the Apache HTTP Server 2.4.
+
+We could go onto the registry.access.redhat.com website to search for images, but we can also use podmans search feature.
+Using the grep command we can filter the result to find the Apache server.
 [source]
 ----
-sudo podman search httpd
+sudo podman search httpd | grep "Apache"
+----
+
+Looking at the image descriptions in the search result we can identify that the Apache HTTP Server 2.4 image is called httpd-24-rhel7 
+and is provided in the rhscl directory in the registry at registry.access.redhat.com.
+
+To download the image, we can use podmans pull feature.
+[source]
+----
 sudo podman pull rhscl/httpd-24-rhel7
 ----
 
 === Managing Images
-...
+Now that we pulled an image from a repository, we can take a look at how images are managed with podman.
 
+First of all, lets get a list of all images on our local machine.
 [source]
 ----
 sudo podman images
 ----
 
+To delete an image, we can use the first unique characters of the image-id. 
+Look at the list of images returned by the previous command and identify the id of the Apache HTTP server image.
+Execute the command below and use the first character of the image-id (there is only one image, so it will be unique).
+[source]
+----
+sudo podman image rm <image-id>
+----
+
+Run the first command again to list all images to see that the image is no longer available.
+
 === Running Containers
-...
+Now to the most exciting part: Running Containers. 
+The podman run command takes an image-id or image-name, or image repository-urn as an argument to run a container of that image.
+It is not necessary to pull an image before running it, since the run command will take care of that.
+When providing only an image-name without specifying the repository, the run command will search for the image and will use the first repository it finds it in.
 
+The podman run command comes with a range of options.
+[-d] will run the container in detached mode (will not block your terminal)
+[-p] opens a port on your localhost to a port of the container
+[--name] will give the container a name, which makes it easier to manage later 
+
+Let run a Apache HTTP Server container in detached mode, while opening the local port 80 to the container port 8080 and giving it the name "webserver".
 [source]
 ----
-sudo podman run -d -p 8080:8080 --name=webserver rhscl/httpd-24-rhel7:2.4-36.8
-curl http://localhost:8080
+sudo podman run -d -p 80:8080 --name=webserver rhscl/httpd-24-rhel7:2.4-36.8
 ----
 
+Now you can check if the Apache HTTP Server is running by using the curl command to perform a HTTP GET request (port 80 us the default HTTP port so we dont have to specify it).
+This command will return an HTML dump of the default website running on the server.
 [source]
 ----
-sudo podman run -it ubi7/ubi:7.7 /bin/bash
-hostname
+curl http://localhost
 ----
+
 
 === Managing Containers
-...
+With the Apache HTTP Server running as a container, we can now discover some container management features of podman.
 
+The following command will list all running containers.
 [source]
 ----
 sudo podman ps
-sudo podman exec webserver cat /etc/hostname
+----
+
+Remember that the running container is not only an application, but an isolated runtime. 
+This means that we can access that runtime! 
+The exec command will run a command in a container: Both the container-id or container-name and the command are provided as arguments. 
+In this case, we want to run bash, so that we have shell access, in the container we named "webserver".
+The exec -i option will execute the command in interactive mode and the [-t] option will provide a communication channel to the container: They come together as [-it].
+[source]
+----
 sudo podman exec -it webserver /bin/bash
+----
+You can now run commands in the container. 
+Run the following two commands to first enter into the root-directory of the container, list the directories to see that it provides a full filesystem, and then exit out of the container runtime.
+[source]
+----
+cd /
+ls
+exit
+----
+
+Of course, you can also execute any other command without having to interactively gain access to the bash-shell.
+[source]
+----
+sudo podman exec webserver echo "hello world"
+----
+
+Now, back to the basics: Lets stop our container using its name (you can also use the container-id as returned by the command that lists all containers).
+[source]
+----
 sudo podman stop webserver
-sudo podman ps
-curl http://localhost:8080
+----
+
+If you now perform an HTTP GET request, it will fail because our web-server is no longer running.
+[source]
+----
+curl http://localhost
+----
+
+If you would now list all containers like we did earlier, it wouldnt return any. 
+To list all containers, including the stopped ones, we have to use the [-a] option.
+[source]
+----
+sudo podman ps -a
+----
+
+A stopped container acts like an image. This means that you can start a stopped container again and the environment will be exactly as it was when the container was stopped.
+[source]
+----
 sudo podman start webserver
 sudo podman ps
-curl http://localhost:8080
+curl http://localhost
+----
+
+Finally, lets stop and then remove our container (a container can only be removed once it stopped).
+[source]
+----
 sudo podman stop webserver
 sudo podman rm webserver
-curl http://localhost:8080
-sudo podman ps
+sudo podman ps -a
 ----
 
 
-=== Attaching Persistent Storage to Containers
-...
+=== Attaching Volumes to Containers
+Podman can mount a host directory inside a running container. The containerized application sees these host directories as part of the container storage, much like regular applications see a remote network volume as part of the host file system. When you remove the container, the system does not reclaim the contents of the container host's directory. 
+
+Lets create a directory that we want to mount as a volume in a container. Inside this directory, we will create a simple html file that we can later serve with a web-server.
+[source]
+----
+mkdir -p ~/webcontent/html/
+echo "<h1> Hello World </h1>" > ~/webcontent/html/index.html
+----
+
+Now lets run the Apache HTTP Server as before, but this time we will mount our new directory as a volume
+The [-v] option is used to specify the host directory path that should be mounted and the container directory path it should be mounted to (the :Z is used to give the directory the correct SELinux permissions).
+[source]
+----
+sudo podman run -d -p 80:8080 --name=webserver -v ~/webcontent:/var/www:Z rhscl/httpd-24-rhel7:2.4-36.8
+----
+
+Now you can check if the Apache HTTP Server is serving our html file by using the curl command to perform a HTTP GET request.
+[source]
+----
+curl http://localhost
+----
+
 
 === Creating and Running Custom Container Images
 ...
+
+
+
+[source]
+----
+
+----
