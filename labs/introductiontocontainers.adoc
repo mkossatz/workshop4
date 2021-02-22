@@ -2,8 +2,7 @@ Author: Max Kossatz (feedback to mkossatz@redhat.com)
 
 == Introducing Containers
 Imagine you’re developing an application. You do your work on a laptop and your environment has a specific configuration. 
-Other developers may have slightly different configurations. The application you’re developing relies on that configuration 
-and is dependent on specific libraries, dependencies, and files. Meanwhile, your business has development and production environments 
+Other developers may have slightly different configurations. The application you’re developing relies on that configuration and is dependent on specific libraries, dependencies, and files. Meanwhile, your business has development and production environments 
 that are standardized with their own configurations and their own sets of supporting files. 
 You want to emulate those environments as much as possible locally, but without all the overhead of recreating the server environments. 
 
@@ -13,11 +12,11 @@ The answer: containers.
 
 === What is a Container?
 Linux containers are technologies that allow you to package and isolate applications with their entire runtime environment (all of the files necessary to run).
-Containers dont require an entire operating system like VMs do only the exact components it needs in order to operate. This provides easy of deployment for operations 
+Containers don't require an entire operating system like VMs do only the exact components it needs to operate. This provides ease of deployment for operations 
 and confidence for developers that their application will run the same on many different platforms or operating systems.
 
 === What is a Pod
-A Kubernetes pod is a collection of one or more Linux containers, and is the smallest unit of a Kubernetes application. 
+A Kubernetes pod is a collection of one or more Linux containers and is the smallest unit of a Kubernetes application. 
 Any given pod can be composed of multiple, tightly coupled containers (an advanced use case) or just a single container (a more common use case).
 It specially uses a main container together with one or more “sidecar containers” running in the same Pod as the main container, to “help” with the main task it was designed for.
 
@@ -27,16 +26,16 @@ If data used by your container must be preserved when the container is restarted
 
 
 === What is a Container Image?
-Container images package all the libraries and dependencies and applicatio needs so you can ship an entire application as one package. 
+Container images package all the libraries and dependencies and application needs so you can ship an entire application as one package. 
 This makes them lightweight, standalone, executable package of software that includes everything needed to run an application: 
-code, runtime, system tools, system libraries and settings.
+code, runtime, system tools, system libraries, and settings.
 
 === What is a Dockerfile?
 Images are built automatically by reading the instructions from a Dockerfile. 
 A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. 
 Using docker build users can create an automated build that executes several command-line instructions in succession.
 
-=== What is a Image Repositories
+=== What is an Image Repositories
 When working with container images, you need somewhere to save and access them as they are created and that’s where a container registry comes in. 
 The registry essentially acts as a place to store container images and share them out via a process of uploading to (pushing) and downloading from (pulling). 
 Once the image is on another system, the original application contained within it can be run on that system as well. 
@@ -53,7 +52,7 @@ but it is also capable of running Pods, which allows developers to use the same 
 
 === Connecting to our Workstation
 So that you can use Podman, we created a workstation server that you can ssh into.
-Using the Web-Terminal you setup in the Workshop Pre-requisites section of this workshop, execute the following command to ssh into the workstation.
+Using the Web-Terminal you set up in the Workshop Pre-requisites section of this workshop, execute the following command to ssh into the workstation.
 [source]
 ----
 ssh 158.176.134.75 -l {{USER_ID}}
@@ -109,20 +108,13 @@ When providing only an image-name without specifying the repository, the run com
 
 The podman run command comes with a range of options.
 [-d] will run the container in detached mode (will not block your terminal)
-[-p] opens a port on your localhost to a port of the container
-[--name] will give the container a name, which makes it easier to manage later 
+[-p] opens a port of the container to a port on your localhost (container:localhost)
+[--name] will give the container a name, which makes it easier to manage later
 
-Let run a Apache HTTP Server container in detached mode, while opening the local port 5000 to the container port 8080 and giving it the name "webserver".
+Lets run a Apache HTTP Server container in detached mode, while opening the container port 8080 to any random available port on our localhost and give it the name "webserver".
 [source]
 ----
-podman run -d -p 5000:8080 --name=webserver rhscl/httpd-24-rhel7
-----
-
-Now you can check if the Apache HTTP Server is running by using the curl command to perform a HTTP GET request (port 80 us the default HTTP port so we dont have to specify it).
-This command will return an HTML dump of the default website running on the server.
-[source]
-----
-curl http://localhost:5000
+podman run -d -p :8080 --name=webserver rhscl/httpd-24-rhel7
 ----
 
 
@@ -135,6 +127,19 @@ The following command will list all running containers.
 podman ps
 ----
 
+Looking at the output of the previous command, identify the port that was opened on your localhost to the webserver container.
+This information can be found under the PORTS column. For a localhost port 4456 being open, the value might look something like this:
+0.0.0.0:4456->8080/tcp
+
+
+Now you can check if the Apache HTTP Server is running by using the curl command to perform a HTTP GET request to localhost on the port you identified as being open.
+This command will return an HTML dump of the default website running on the server.
+[source]
+----
+curl http://localhost:<port>
+----
+
+
 Remember that the running container is not only an application, but an isolated runtime. 
 This means that we can access that runtime! 
 The exec command will run a command in a container: Both the container-id or container-name and the command are provided as arguments. 
@@ -145,12 +150,12 @@ The exec -i option will execute the command in interactive mode and the [-t] opt
 podman exec -it webserver /bin/bash
 ----
 You can now run commands in the container. 
-Run the following two commands to first we make sure that we are in our home directory, there we will create a text-file, and then exit out of the container runtime.
+Run the following commands to enter the home directory, create a text file containing "Hello World", and then output the content of that file, followed by exiting out of the container shell.
 [source]
 ----
 cd ~
 echo "Hello World" > somefile.txt
-ls
+cat somefile.txt
 exit
 ----
 
@@ -169,7 +174,7 @@ podman stop webserver
 If you now perform an HTTP GET request, it will fail because our web-server is no longer running.
 [source]
 ----
-curl http://localhost:5000
+curl http://localhost:<port>
 ----
 
 If you would now list all containers like we did earlier, it wouldnt return any. 
@@ -184,13 +189,13 @@ A stopped container acts like an image. This means that you can start a stopped 
 ----
 podman start webserver
 podman ps
-curl http://localhost:5000
+curl http://localhost:<port>
 ----
 
 To prove that the envionment of the container has persisted, lets try and see if we can find the file we created inside of it earlier.
 [source]
 ----
-podman exec webserver cat ~/somefile.txt
+podman exec webserver cat somefile.txt
 ----
 
 
@@ -202,7 +207,7 @@ podman rm webserver
 podman ps -a
 ----
 
-
+////
 === Attaching Volumes to Containers
 Podman can mount a host directory inside a running container. The containerized application sees these host directories as part of the container storage, much like regular applications see a remote network volume as part of the host file system. When you remove the container, the system does not reclaim the contents of the container host's directory. 
 
@@ -223,9 +228,9 @@ podman run -d -p 5000:8080 --name=webserver -v ~/webcontent:/var/www:Z rhscl/htt
 Now you can check if the Apache HTTP Server is serving our html file by using the curl command to perform a HTTP GET request.
 [source]
 ----
-curl http://localhost:5000
+curl http://localhost:<port>
 ----
-
+////
 
 
 === Finishing
