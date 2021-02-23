@@ -4,7 +4,7 @@ workshop_manifests:
     labs:
       - id: intro
         title: Introduction
-      - id: prereq
+      - id: prereqcontainerworkstation
         title: Workshop Pre-requisites
       - id: introductiontooc
         title: Introduction to 'oc'
