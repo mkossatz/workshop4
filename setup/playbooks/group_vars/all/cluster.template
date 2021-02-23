@@ -19,4 +19,4 @@ project_name: devex
 ROUTE_URL:
 
 # The introductiontocontainers.adoc workshop requires the ip of the VM that the participants will ssh into to work with podman.
-VM_WORKSTATION_IP: 158.175.94.110
+VM_WORKSTATION_IP: 
