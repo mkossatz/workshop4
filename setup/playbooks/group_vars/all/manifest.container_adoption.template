@@ -2,7 +2,7 @@ workshop_manifests:
   - id: container_adoption
     title: Container Adoption
     labs:
-      - id: prereqcontainerworkstation
+      - id: containerworkstation
         title: Workshop Pre-requisites
       - id: introductiontocontainers
         title: Introduction to Containers

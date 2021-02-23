@@ -4,7 +4,7 @@ config:
 modules:
   intro:
     name: Introduction
-  prereqcontainerworkstation:
+  containerworkstation:
     name: Workshop Pre-requisites
   introductiontocontainers:
     name: Introduction to Containers
