@@ -3,5 +3,3 @@ username_app_admin_pass: pleasechangethis
 username_app_user_pass: openshift
 
 user_count: 100
-
-vm_workstation_ip: 158.175.94.110
