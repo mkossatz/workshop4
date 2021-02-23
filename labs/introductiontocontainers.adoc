@@ -55,7 +55,7 @@ So that you can use Podman, we created a workstation server that you can ssh int
 Using the Web-Terminal you set up in the Workshop Pre-requisites section of this workshop, execute the following command to ssh into the workstation.
 [source]
 ----
-ssh 158.176.134.75 -l {{USER_ID}}
+ssh {{vm_workstation_ip}} -l {{USER_ID}}
 ----
 The password for your user is the same as your username: {{USER_ID}}
 
