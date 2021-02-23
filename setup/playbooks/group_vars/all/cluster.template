@@ -17,3 +17,6 @@ project_name: devex
 # 4-character cluster identifier
 # e.g. aec4 in http://codeready-crw.apps.cluster-aec4.aec4.example.opentlc.com
 ROUTE_URL:
+
+# The introductiontocontainers.adoc workshop requires the ip of the VM that the participants will ssh into to work with podman.
+VM_WORKSTATION_IP: 158.175.94.110
